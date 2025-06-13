@@ -1,0 +1,12 @@
+{
+  "name": "amazon-q-git-diff-reviewer",
+  "version": "1.0.0",
+  "description": "Amazon Q を使用したGit差分自動レビューツール",
+  "main": "review.js",
+  "scripts": {
+    "review": "node review.js"
+  },
+  "keywords": ["amazon-q", "code-review", "git-diff", "automation"],
+  "author": "",
+  "license": "MIT"
+}
