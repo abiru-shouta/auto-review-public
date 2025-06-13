@@ -11,7 +11,7 @@ class GitDiffReviewer {
     }
 
     async performReview() {
-        console.log('🔍 Git差分レビューを開始します...');
+        console.log('🔍 ステージングされたファイルのレビューを開始します...');
         console.log(`📁 プロジェクトルート: ${this.projectRoot}`);
         
         try {
@@ -19,22 +19,23 @@ class GitDiffReviewer {
             console.log('📂 プロジェクトルートに移動中...');
             process.chdir(this.projectRoot);
             
-            // git差分を取得
-            console.log('📋 Git差分を取得中...');
+            // ステージングされた差分を取得
+            console.log('📋 ステージングされた差分を取得中...');
             const gitDiff = await this.getGitDiff();
             
             if (!gitDiff.trim()) {
-                console.log('📋 git差分がありません。レビュー対象がありません。');
+                console.log('📋 ステージングされた変更がありません。レビュー対象がありません。');
+                console.log('💡 ヒント: git add でファイルをステージングしてからレビューを実行してください');
                 this.clearReviewFile();
                 return;
             }
 
-            console.log('📝 差分を検出しました。Amazon Q でレビューを実行中...');
+            console.log('📝 ステージングされた変更を検出しました。Amazon Q でレビューを実行中...');
 
-            // 変更されたファイル一覧を取得
-            console.log('📄 変更ファイル一覧を取得中...');
+            // ステージングされたファイル一覧を取得
+            console.log('📄 ステージングされたファイル一覧を取得中...');
             const changedFiles = await this.getChangedFiles();
-            console.log(`📄 変更ファイル数: ${changedFiles.length}`);
+            console.log(`📄 ステージングされたファイル数: ${changedFiles.length}`);
             changedFiles.forEach(file => console.log(`  - ${file}`));
             
             // Amazon Q でレビュー実行
@@ -67,7 +68,7 @@ class GitDiffReviewer {
 
     async getGitDiff() {
         return new Promise((resolve, reject) => {
-            exec('git diff', (error, stdout, stderr) => {
+            exec('git diff --cached', (error, stdout, stderr) => {
                 if (error) {
                     reject(new Error(`Git diff error: ${error.message}`));
                     return;
@@ -79,7 +80,7 @@ class GitDiffReviewer {
 
     async getChangedFiles() {
         return new Promise((resolve, reject) => {
-            exec('git diff --name-only', (error, stdout, stderr) => {
+            exec('git diff --cached --name-only', (error, stdout, stderr) => {
                 if (error) {
                     reject(new Error(`Git diff --name-only error: ${error.message}`));
                     return;
@@ -99,7 +100,7 @@ class GitDiffReviewer {
                     return;
                 }
                 
-                const prompt = `以下のgit差分をレビューしてください。プロジェクトのコードレビューとして、以下の観点でチェックしてください：
+                const prompt = `以下のステージングされた変更をレビューしてください。homes-spプロジェクトのコードレビューとして、以下の観点でチェックしてください：
 
 ## レビュー観点
 
@@ -109,19 +110,21 @@ class GitDiffReviewer {
 - 条件分岐の論理エラー
 - 配列・オブジェクトのアクセスエラー
 
-### 2. **コーディング規約の遵守**
-- 命名規則の一貫性
-- コメントの記載方法
-- インデント・フォーマット
-- 言語固有のベストプラクティス
+### 2. **homes-sp固有の規約遵守**
+- A/Bテストメソッドの実装パターン
+- 直アクセス判定の実装
+- 賃貸居住用チェックの実装
+- Twigテンプレートの変数受け渡し
+- コメントの記載方法（A/Bテスト番号とタイトル）
 
-### 3. **フレームワーク規約**
-- 使用しているフレームワークの規約遵守
-- アーキテクチャパターンの適用
-- 設定ファイルの記述方法
+### 3. **Symfony/Twig規約**
+- DIコンテナの適切な使用
+- Twigテンプレートの継承・include
+- ルーティング設定
+- バリデーション設定
 
-### 4. **フロントエンド（該当する場合）**
-- CSS/SCSSの命名規則
+### 4. **フロントエンド**
+- CSS/SCSSの命名規則（BEM準拠）
 - JavaScript の実装
 - レスポンシブ対応
 
@@ -143,9 +146,9 @@ class GitDiffReviewer {
 
 ---
 
-**変更されたファイル:** ${changedFiles.join(', ')}
+**ステージングされたファイル:** ${changedFiles.join(', ')}
 
-**Git差分:**
+**ステージングされた変更:**
 \`\`\`diff
 ${gitDiff}
 \`\`\`
@@ -225,9 +228,13 @@ ${gitDiff}
     }
 
     clearReviewFile() {
-        const emptyContent = `# Git差分レビュー結果
+        const emptyContent = `# ステージングされたファイルのレビュー結果
 
-現在レビュー対象の差分はありません。
+現在レビュー対象のステージングされた変更はありません。
+
+**使用方法:**
+1. \`git add <ファイル名>\` でファイルをステージング
+2. \`node auto-review/review.js\` でレビュー実行
 
 ---
 *最終更新: ${new Date().toISOString()}*
@@ -238,11 +245,11 @@ ${gitDiff}
 
     async saveReview(review, changedFiles) {
         const timestamp = new Date().toISOString();
-        const reviewContent = `# Git差分レビュー結果
+        const reviewContent = `# ステージングされたファイルのレビュー結果
 
 **レビュー実行時刻:** ${timestamp}
 
-## 📄 変更されたファイル
+## 📄 ステージングされたファイル
 ${changedFiles.map(file => `- \`${file}\``).join('\n')}
 
 ---
