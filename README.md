@@ -1,33 +1,39 @@
-# Amazon Q Git差分レビューツール
+# ステージングされたファイルのレビューツール
 
-Amazon Q を使用してgit差分を自動レビューするツールです。
+Amazon Q を使用してステージングされたファイルを自動レビューするツールです。
 
 ## 🚀 使用方法
 
 ### 基本的な使い方
 
 ```bash
-# auto-reviewディレクトリに移動
+# 1. ファイルをステージング
+git add <ファイル名>
+
+# 2. auto-reviewディレクトリに移動
 cd auto-review
 
-# レビュー実行
+# 3. レビュー実行
 npm run review
 ```
 
 ### 直接実行
 
 ```bash
-# auto-reviewディレクトリに移動
+# 1. ファイルをステージング
+git add src/template-spec/route/rent/sp/ra_list/31C110_compact_searching_room_messge/
+
+# 2. auto-reviewディレクトリに移動
 cd auto-review
 
-# 直接実行
+# 3. 直接実行
 node review.js
 ```
 
 ## 📋 動作の流れ
 
-1. **git差分を取得** - `git diff` で未コミットの変更を取得
-2. **変更ファイル一覧を取得** - `git diff --name-only` で変更されたファイル名を取得
+1. **ステージングされた差分を取得** - `git diff --cached` でステージングされた変更を取得
+2. **ステージングされたファイル一覧を取得** - `git diff --cached --name-only` でファイル名を取得
 3. **Amazon Q でレビュー** - 差分内容をAmazon Q に送信してレビューを依頼
 4. **結果を保存** - `review-result.md` に結果を保存（過去の結果は上書き）
 
@@ -36,39 +42,43 @@ node review.js
 ### `review-result.md`
 - レビュー結果が保存されます
 - 実行するたびに内容が更新されます（過去の結果は消去）
-- 差分がない場合は「レビュー対象なし」と表示されます
+- ステージングされた変更がない場合は「レビュー対象なし」と表示されます
 
 ## 🔍 レビュー観点
 
-### 一般的な観点
-- **バグの可能性**: 変数名の不一致、null/undefinedチェック漏れ
-- **コーディング規約**: 命名規則、コメント、フォーマット
-- **フレームワーク規約**: 使用フレームワークの規約遵守
-- **セキュリティ**: XSS対策、SQLインジェクション対策
-- **パフォーマンス**: 不要な処理、クエリ最適化
-- **可読性・保守性**: 複雑な条件分岐の簡素化
+### homes-sp固有の観点
+- A/Bテストメソッドの実装パターン
+- 直アクセス判定の実装
+- 賃貸居住用チェックの実装
+- Twigテンプレートの変数受け渡し
 
-### 自動適応
-Amazon Q が差分内容から自動的に：
-- 言語を判定
-- フレームワークを認識
-- 適切なレビュー観点を適用
+### 一般的な観点
+- バグの可能性
+- セキュリティ問題
+- パフォーマンス問題
+- 可読性・保守性
 
 ## 📝 使用例
 
 ```bash
+# ファイルをステージング
+$ git add src/template-spec/route/rent/sp/ra_list/31C110_compact_searching_room_messge/
+
+# レビュー実行
 $ cd auto-review
 $ npm run review
 
-🔍 Git差分レビューを開始します...
-📁 プロジェクトルート: /path/to/your/project
-📝 差分を検出しました。Amazon Q でレビューを実行中...
-📄 変更ファイル数: 2
-  - src/components/Header.jsx
-  - src/utils/validation.js
+🔍 ステージングされたファイルのレビューを開始します...
+📁 プロジェクトルート: /Users/username/Desktop/dev/puppeteer-auto-test
+📋 ステージングされた差分を取得中...
+📝 ステージングされた変更を検出しました。Amazon Q でレビューを実行中...
+📄 ステージングされたファイル数: 3
+  - src/template-spec/route/rent/sp/ra_list/31C110_compact_searching_room_messge/test_case_a.spec.js
+  - src/template-spec/route/rent/sp/ra_list/31C110_compact_searching_room_messge/test_case_a.env.js
+  - src/template-spec/route/rent/sp/ra_list/31C110_compact_searching_room_messge/README.md
 🤖 Amazon Q にレビューを依頼中...
 ✅ レビューが完了しました。
-📄 結果は review-result.md に保存されました。
+📄 結果は /Users/username/Desktop/dev/puppeteer-auto-test/auto-review/review-result.md に保存されました。
 ```
 
 ## ⚠️ 前提条件
@@ -80,9 +90,9 @@ $ npm run review
 
 2. **プロジェクトルートがgitリポジトリであること**
 
-3. **レビュー対象の変更がgit差分として存在すること**
-   - `git add` する前の変更が対象
-   - コミット済みの変更は対象外
+3. **レビュー対象のファイルがステージングされていること**
+   - `git add` でステージングされたファイルが対象
+   - ステージングされていない変更は対象外
 
 ## 🐛 トラブルシューティング
 
@@ -95,13 +105,16 @@ which q
 export PATH=$PATH:/path/to/q/cli
 ```
 
-### git差分がない場合
+### ステージングされた変更がない場合
 ```bash
 # 現在の状態を確認
 git status
 
-# 差分があるか確認
-git diff
+# ステージングされた差分があるか確認
+git diff --cached
+
+# ファイルをステージング
+git add <ファイル名>
 ```
 
 ### 権限エラーが発生する場合
@@ -122,51 +135,34 @@ auto-review/
 ## 🔄 ワークフロー例
 
 1. **コードを修正**
-2. **レビュー実行**
+2. **ファイルをステージング**
+   ```bash
+   git add src/path/to/modified/file.js
+   ```
+3. **レビュー実行**
    ```bash
    cd auto-review && npm run review
    ```
-3. **結果確認**
+4. **結果確認**
    ```bash
    cat review-result.md
    ```
-4. **問題があれば修正**
-5. **再度レビュー実行**
-6. **問題なければコミット**
+5. **問題があれば修正してステージング**
    ```bash
-   git add .
-   git commit -m "fix: レビュー指摘事項を修正"
+   # 修正後
+   git add src/path/to/modified/file.js
+   ```
+6. **再度レビュー実行**
+7. **問題なければコミット**
+   ```bash
+   git commit -m "feat: 新機能を追加"
    ```
 
-## 📦 他のプロジェクトでの使用
+## 💡 ステージングのメリット
 
-このツールは完全にポータブルです：
+- **選択的レビュー**: 特定のファイルのみをレビュー対象にできる
+- **新規ファイル対応**: 新規ファイルも`git add`でステージングすればレビュー対象
+- **部分的変更**: `git add -p`で変更の一部のみをステージングしてレビュー可能
+- **確実性**: ステージングされた内容のみがレビューされるため、意図しない変更の混入を防止
 
-```bash
-# 他のプロジェクトにコピー
-cp -r auto-review /path/to/other/project/
-
-# すぐに使用可能
-cd /path/to/other/project/auto-review
-npm run review
-```
-
-## 🎯 対応言語・フレームワーク
-
-- **PHP**: Laravel, Symfony, CakePHP
-- **JavaScript**: React, Vue, Node.js, Express
-- **Python**: Django, Flask, FastAPI
-- **Ruby**: Rails, Sinatra
-- **Java**: Spring Boot, Spring MVC
-- **Go**: Gin, Echo
-- **その他**: Rust, C#, TypeScript など
-
-Amazon Q が自動的に言語とフレームワークを判定し、適切なレビューを行います。
-
-## 📄 ライセンス
-
-MIT License
-
-## 🤝 貢献
-
-プルリクエストやイシューの報告を歓迎します！
+これで効率的で確実なコードレビューが可能になります！
